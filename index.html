@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Anniversaire Pierre</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase -->
+ <script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyA4hj-igBeMMAW6yhmfeJYtDc9wMT-MiU4",
+
+  authDomain: "annif-f8d88.firebaseapp.com",
+
+  projectId: "annif-f8d88",
+
+  storageBucket: "annif-f8d88.firebasestorage.app",
+
+  messagingSenderId: "828146417463",
+
+  appId: "1:828146417463:web:2ce68749bdb6152876a4b2",
+
+  measurementId: "G-QQ64Q3QWBJ"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+// ======================================
+// DOM LOADED
+// ======================================
+
+window.addEventListener("DOMContentLoaded", () => {
+
+  const form =
+    document.getElementById("rsvpForm");
+
+  const submitBtn =
+    document.getElementById("submitBtn");
+
+  // ======================================
+  // SUBMIT RSVP
+  // ======================================
+
+  form.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    submitBtn.innerText = "Envoi...";
+
+    const data = {
+
+      name:
+        document.getElementById("name").value,
+
+      guests:
+        document.getElementById("guests").value,
+
+      contribution:
+        document.getElementById("contribution").value,
+
+      message:
+        document.getElementById("message").value,
+
+      createdAt: new Date()
+    };
+
+    try {
+
+      await addDoc(
+        collection(db, "rsvps"),
+        data
+      );
+
+      document
+        .getElementById("success")
+        .classList.remove("hidden");
+
+      form.reset();
+
+      loadRSVPs();
+
+    } catch (err) {
+
+      console.error(err);
+
+      alert(err.message);
+    }
+
+    submitBtn.innerText =
+      "Confirmer ma présence";
+  });
+
+  // Charger les données au démarrage
+  loadRSVPs();
+});
+
+// ======================================
+// LOAD RSVP
+// ======================================
+
+async function loadRSVPs() {
+
+  const q = query(
+    collection(db, "rsvps"),
+    orderBy("createdAt", "desc")
+  );
+
+  const querySnapshot =
+    await getDocs(q);
+
+  const list =
+    document.getElementById("rsvpList");
+
+  list.innerHTML = "";
+
+  let totalGuests = 0;
+
+  querySnapshot.forEach((doc) => {
+
+    const rsvp = doc.data();
+
+    totalGuests += parseInt(rsvp.guests);
+
+    list.innerHTML += `
+
+      <div class="bg-white rounded-2xl p-6 shadow-lg">
+
+        <div class="flex justify-between items-center mb-3">
+
+          <h3 class="text-2xl font-bold text-purple-900">
+            ${rsvp.name}
+          </h3>
+
+          <span class="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm">
+            ${rsvp.guests} personne(s)
+          </span>
+
+        </div>
+
+        ${
+          rsvp.contribution
+          ? `
+            <p class="mb-2">
+              🎁 <b>Contribution :</b>
+              ${rsvp.contribution}
+            </p>
+          `
+          : ""
+        }
+
+        ${
+          rsvp.message
+          ? `
+            <p class="italic text-gray-600">
+              "${rsvp.message}"
+            </p>
+          `
+          : ""
+        }
+
+      </div>
+    `;
+  });
+
+  document.getElementById("stats")
+    .innerHTML = `
+
+    <div class="bg-white rounded-2xl p-6 text-center">
+
+      <h3 class="text-gray-500">
+        Confirmations
+      </h3>
+
+      <p class="text-5xl font-bold text-purple-700">
+        ${querySnapshot.size}
+      </p>
+
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 text-center">
+
+      <h3 class="text-gray-500">
+        Total Invités
+      </h3>
+
+      <p class="text-5xl font-bold text-pink-700">
+        ${totalGuests}
+      </p>
+
+    </div>
+  `;
+}
+
+</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+
+    * {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+
+      background:
+      radial-gradient(circle at top left,
+      #7c3aed,
+      transparent 30%),
+
+      radial-gradient(circle at top right,
+      #ec4899,
+      transparent 30%),
+
+      linear-gradient(
+        135deg,
+        #4c1d95,
+        #7e22ce,
+        #db2777
+      );
+
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .glass {
+
+      background: rgba(255,255,255,0.1);
+
+      backdrop-filter: blur(12px);
+
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .card {
+
+      transition: 0.4s ease;
+    }
+
+    .card:hover {
+
+      transform:
+      translateY(-8px)
+      scale(1.03);
+    }
+
+    .glow {
+
+      box-shadow:
+      0 0 20px rgba(255,255,255,0.3),
+      0 0 40px rgba(255,255,255,0.15);
+    }
+
+    .floating {
+
+      animation:
+      float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-12px);
+      }
+    }
+    .glow {
+
+  box-shadow:
+  0 0 25px rgba(255,255,255,0.4),
+  0 0 60px rgba(255,255,255,0.25);
+}
+
+  /* ========================= */
+/* BALLONS */
+/* ========================= */
+
+#balloons-container{
+
+  position: fixed;
+
+  inset: 0;
+
+  overflow: hidden;
+
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+.balloon{
+
+  position: absolute;
+
+  bottom: -200px;
+
+  width: 80px;
+
+  height: 100px;
+
+  border-radius: 50%;
+
+  opacity: 0.85;
+
+  animation: floatBalloon linear infinite;
+}
+
+.balloon::before{
+
+  content: "";
+
+  position: absolute;
+
+  width: 2px;
+
+  height: 120px;
+
+  background: rgba(255,255,255,0.7);
+
+  left: 50%;
+
+  top: 100%;
+}
+
+@keyframes floatBalloon{
+
+  0%{
+
+    transform:
+      translateY(0)
+      rotate(0deg);
+
+    opacity: 0;
+  }
+
+  10%{
+    opacity: 1;
+  }
+
+  100%{
+
+    transform:
+      translateY(-130vh)
+      rotate(10deg);
+
+    opacity: 0;
+  }
+}
+  </style>
+
+</head>
+
+<body>
+
+  <!-- BALLONS ANIMÉS -->
+
+<div id="balloons-container"></div>
+
+  <!-- HERO -->
+
+  <section class="px-6 py-20 text-center">
+
+    <div class="floating inline-block mb-8">
+
+      <div class="text-7xl">
+        🎉
+      </div>
+
+    </div>
+
+    <h1 class="text-5xl md:text-7xl font-extrabold text-white mb-8">
+
+      Fête d'Anniversaire!
+
+    </h1>
+
+   <!-- PHOTO -->
+
+<div class="relative w-72 h-72 md:w-80 md:h-80 mx-auto mb-10">
+
+  <!-- Glow -->
+  <div class="absolute inset-0 bg-yellow-400 rounded-full blur-3xl opacity-40 scale-110"></div>
+
+  <!-- Cercle photo -->
+  <div class="relative w-full h-full rounded-full overflow-hidden border-8 border-white glow shadow-2xl">
+
+    <img
+      src="pierre annif.png"
+      alt="Pierre"
+      class="w-full h-full object-cover scale-110"
+      style="
+        object-position: center top;
+      "
+    />
+
+  </div>
+  <!-- Sparkles -->
+  <div class="absolute -top-2 left-10 text-3xl animate-bounce">
+    ✨
+  </div>
+
+  <div class="absolute top-10 -right-4 text-3xl animate-pulse">
+    🎉
+  </div>
+
+  <div class="absolute bottom-4 -left-2 text-3xl animate-bounce">
+    ✨
+  </div>
+
+</div>
+
+    <h2 class="text-4xl md:text-6xl font-bold text-yellow-300 mb-6">
+
+      Pierre Babalola FAGBOHOUN
+
+    </h2>
+
+    <p class="text-white text-xl max-w-2xl mx-auto">
+
+      Une soirée inoubliable vous attend ✨
+
+    </p>
+
+  </section>
+
+  <!-- EVENT DETAILS -->
+
+  <section class="max-w-6xl mx-auto px-6 mb-16">
+
+    <div class="glass rounded-3xl p-10">
+
+      <h2 class="text-4xl text-center text-white font-bold mb-10">
+
+        Détails de l'Événement
+
+      </h2>
+
+      <div class="grid md:grid-cols-4 gap-6">
+
+        <div class="card bg-white rounded-2xl p-6 text-center">
+
+          <div class="text-5xl mb-4">
+            📅
+          </div>
+
+          <p class="text-gray-500">
+            Date
+          </p>
+
+          <h3 class="text-xl font-bold">
+            Samedi 09 Mai 2026
+          </h3>
+
+        </div>
+
+        <div class="card bg-white rounded-2xl p-6 text-center">
+
+          <div class="text-5xl mb-4">
+            🕗
+          </div>
+
+          <p class="text-gray-500">
+            Heure
+          </p>
+
+          <h3 class="text-xl font-bold">
+            20h00
+          </h3>
+
+        </div>
+
+        <div class="card bg-white rounded-2xl p-6 text-center">
+
+          <div class="text-5xl mb-4">
+            📍
+          </div>
+
+          <p class="text-gray-500">
+            Lieu
+          </p>
+
+          <h3 class="text-xl font-bold">
+            Womey(A confirmer)
+          </h3>
+
+        </div>
+
+        <div class="card bg-white rounded-2xl p-6 text-center">
+
+          <div class="text-5xl mb-4">
+            🎊
+          </div>
+
+          <p class="text-gray-500">
+            Type
+          </p>
+
+          <h3 class="text-xl font-bold">
+            Soirée Festive
+          </h3>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- CONTRIBUTIONS -->
+
+<section class="max-w-6xl mx-auto px-6 mb-16">
+
+  <div class="glass rounded-3xl p-10">
+
+    <div class="text-center mb-12">
+
+      <div class="text-6xl mb-4">
+        🎁
+      </div>
+
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+        Contribuez à la Fête
+      </h2>
+
+      <p class="text-white/80 text-lg max-w-3xl mx-auto">
+        Vous pouvez contribuer à la bonne ambiance et à la restauration
+        en apportant ce que vous souhaitez parmi les suggestions suivantes :
+      </p>
+
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- CARD -->
+
+      <div class="card bg-white rounded-2xl p-6">
+
+        <div class="w-16 h-16 rounded-full bg-purple-500 flex items-center justify-center text-3xl mb-4">
+          🎵
+        </div>
+
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">
+          Musique & Ambiance
+        </h3>
+
+        <p class="text-gray-600">
+          Playlists, instruments ou talent musical
+        </p>
+
+      </div>
+
+      <!-- CARD -->
+
+      <div class="card bg-white rounded-2xl p-6">
+
+        <div class="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-3xl mb-4">
+          🍕
+        </div>
+
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">
+          Plats & Snacks
+        </h3>
+
+        <p class="text-gray-600">
+          Spécialités maison ou finger food
+        </p>
+
+      </div>
+
+      <!-- CARD -->
+
+      <div class="card bg-white rounded-2xl p-6">
+
+        <div class="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center text-3xl mb-4">
+          🍾
+        </div>
+
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">
+          Boissons
+        </h3>
+
+        <p class="text-gray-600">
+          Champagnes, vins, sodas ou jus
+        </p>
+
+      </div>
+
+      <!-- CARD -->
+
+      <div class="card bg-white rounded-2xl p-6">
+
+        <div class="w-16 h-16 rounded-full bg-pink-500 flex items-center justify-center text-3xl mb-4">
+          🎂
+        </div>
+
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">
+          Desserts
+        </h3>
+
+        <p class="text-gray-600">
+          Gâteaux, pâtisseries ou gourmandises
+        </p>
+
+      </div>
+
+      <!-- CARD -->
+
+      <div class="card bg-white rounded-2xl p-6">
+
+        <div class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-3xl mb-4">
+          🎈
+        </div>
+
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">
+          Décorations
+        </h3>
+
+        <p class="text-gray-600">
+          Ballons, guirlandes ou accessoires
+        </p>
+
+      </div>
+
+      <!-- CARD -->
+
+      <div class="card bg-white rounded-2xl p-6">
+
+        <div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center text-3xl mb-4">
+          😄
+        </div>
+
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">
+          Bonne Humeur
+        </h3>
+
+        <p class="text-gray-600">
+          Votre sourire et votre énergie positive
+        </p>
+
+      </div>
+
+    </div>
+
+    <!-- NOTE -->
+
+    <div class="mt-10 bg-gradient-to-r from-yellow-300 to-orange-400 rounded-3xl p-8 text-center shadow-2xl">
+
+      <h3 class="text-2xl font-bold text-orange-900 mb-3">
+        💝 Toutes les contributions sont les bienvenues !
+      </h3>
+
+      <p class="text-orange-900 text-lg">
+        Mais rappelez-vous :
+        votre présence est le cadeau le plus précieux.
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+  <!-- RSVP -->
+
+  <section class="max-w-4xl mx-auto px-6 mb-16">
+
+    <div class="glass rounded-3xl p-10">
+
+      <h2 class="text-4xl text-center text-white font-bold mb-10">
+
+        Confirmez Votre Présence
+
+      </h2>
+
+      <form
+        id="rsvpForm"
+        class="space-y-6"
+      >
+
+        <input
+          type="text"
+          id="name"
+          placeholder="Votre nom"
+          required
+          class="w-full p-4 rounded-xl"
+        />
+
+        <select
+          id="guests"
+          class="w-full p-4 rounded-xl"
+        >
+
+          <option value="1">
+            1 personne
+          </option>
+
+          <option value="2">
+            2 personnes
+          </option>
+
+          <option value="3">
+            3 personnes
+          </option>
+
+          <option value="4">
+            4 personnes
+          </option>
+
+        </select>
+
+        <input
+          type="text"
+          id="contribution"
+          placeholder="Votre contribution"
+          class="w-full p-4 rounded-xl"
+        />
+
+        <textarea
+          id="message"
+          rows="5"
+          placeholder="Votre message"
+          class="w-full p-4 rounded-xl"
+        ></textarea>
+
+        <button
+          id="submitBtn"
+          type="submit"
+          class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl text-xl font-bold hover:scale-105 transition"
+        >
+
+          Confirmer ma présence
+
+        </button>
+
+      </form>
+
+      <div
+        id="success"
+        class="hidden mt-6 bg-green-500 text-white p-4 rounded-xl text-center"
+      >
+
+        Confirmation enregistrée 🎉
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- LISTE RSVP -->
+
+  <section class="max-w-5xl mx-auto px-6 pb-20">
+
+    <div class="glass rounded-3xl p-10">
+
+      <h2 class="text-4xl text-white font-bold mb-8">
+
+        Liste des invités
+
+      </h2>
+
+      <div
+        id="stats"
+        class="grid md:grid-cols-2 gap-6 mb-8"
+      ></div>
+
+      <div
+        id="rsvpList"
+        class="space-y-4"
+      ></div>
+
+    </div>
+
+  </section>
+<a
+  href=""
+  class="fixed bottom-6 right-6 bg-black/70 hover:bg-black text-white px-5 py-3 rounded-full shadow-2xl backdrop-blur-md transition"
+>
+  Administration
+</a>
+<script>
+
+/* ========================= */
+/* GÉNÉRATION BALLONS */
+/* ========================= */
+
+const colors = [
+
+  "#ff4d6d",
+  "#ffbe0b",
+  "#8338ec",
+  "#3a86ff",
+  "#06d6a0",
+  "#fb5607",
+  "#ff006e"
+];
+
+const container =
+  document.getElementById("balloons-container");
+
+function createBalloon(){
+
+  const balloon =
+    document.createElement("div");
+
+  balloon.classList.add("balloon");
+
+  const size =
+    Math.random() * 60 + 60;
+
+  balloon.style.width =
+    `${size}px`;
+
+  balloon.style.height =
+    `${size * 1.2}px`;
+
+  balloon.style.left =
+    `${Math.random() * 100}%`;
+
+  balloon.style.background =
+    colors[Math.floor(Math.random() * colors.length)];
+
+  balloon.style.animationDuration =
+    `${Math.random() * 8 + 8}s`;
+
+  balloon.style.animationDelay =
+    `${Math.random() * 3}s`;
+
+  container.appendChild(balloon);
+
+  setTimeout(() => {
+
+    balloon.remove();
+
+  }, 16000);
+}
+
+/* Création initiale */
+
+for(let i = 0; i < 5; i++){
+
+  createBalloon();
+}
+
+/* Nouveaux ballons continus */
+
+setInterval(createBalloon, 1200);
+
+</script>
+</body>
+</html>

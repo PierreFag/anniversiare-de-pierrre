@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Administration - Anniversaire Pierre</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+
+    *{
+      font-family:'Poppins',sans-serif;
+    }
+
+    body{
+
+      background:
+      radial-gradient(circle at top left,#7c3aed,transparent 30%),
+      radial-gradient(circle at top right,#ec4899,transparent 30%),
+      linear-gradient(135deg,#4c1d95,#7e22ce,#db2777);
+
+      min-height:100vh;
+    }
+
+    .glass{
+
+      background:rgba(255,255,255,0.1);
+
+      backdrop-filter:blur(12px);
+
+      border:1px solid rgba(255,255,255,0.2);
+    }
+
+  </style>
+</head>
+
+<body class="p-6">
+
+<!-- LOGIN -->
+
+<div id="loginPage" class="max-w-md mx-auto mt-32">
+
+  <div class="glass rounded-3xl p-10 text-center">
+
+    <h1 class="text-4xl font-bold text-white mb-8">
+      🔐 Administration
+    </h1>
+
+    <input
+      type="password"
+      id="password"
+      placeholder="Mot de passe admin"
+      class="w-full p-4 rounded-xl mb-6"
+    />
+
+    <button
+      onclick="login()"
+      class="w-full bg-black text-white py-4 rounded-xl text-xl font-bold hover:scale-105 transition"
+    >
+      Connexion
+    </button>
+
+    <p
+      id="loginError"
+      class="text-red-300 mt-4 hidden"
+    >
+      Mot de passe incorrect
+    </p>
+
+  </div>
+
+</div>
+
+<!-- ADMIN PANEL -->
+
+<div id="adminPanel" class="hidden max-w-6xl mx-auto">
+
+  <div class="glass rounded-3xl p-10">
+
+    <div class="flex justify-between items-center mb-10">
+
+      <div>
+
+        <h1 class="text-5xl font-bold text-white">
+          Dashboard RSVP
+        </h1>
+
+        <p class="text-white/70 mt-2">
+          Gestion des invitations
+        </p>
+
+      </div>
+
+      <button
+        onclick="logout()"
+        class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl"
+      >
+        Déconnexion
+      </button>
+
+    </div>
+
+    <!-- STATS -->
+
+    <div
+      id="stats"
+      class="grid md:grid-cols-3 gap-6 mb-10"
+    ></div>
+
+    <!-- LISTE -->
+
+    <div
+      id="adminList"
+      class="space-y-6"
+    ></div>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  doc,
+  query,
+  orderBy
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ===================================== */
+/* FIREBASE */
+/* ===================================== */
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyA4hj-igBeMMAW6yhmfeJYtDc9wMT-MiU4",
+
+  authDomain: "annif-f8d88.firebaseapp.com",
+
+  projectId: "annif-f8d88",
+
+  storageBucket: "annif-f8d88.firebasestorage.app",
+
+  messagingSenderId: "828146417463",
+
+  appId: "1:828146417463:web:2ce68749bdb6152876a4b2",
+
+  measurementId: "G-QQ64Q3QWBJ"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+/* ===================================== */
+/* MOT DE PASSE ADMIN */
+/* ===================================== */
+
+const ADMIN_PASSWORD = "pierre2026";
+
+/* ===================================== */
+/* LOGIN */
+/* ===================================== */
+
+window.login = function(){
+
+  const password =
+    document.getElementById("password").value;
+
+  if(password === ADMIN_PASSWORD){
+
+    sessionStorage.setItem("admin","true");
+
+    showAdmin();
+
+  }else{
+
+    document
+      .getElementById("loginError")
+      .classList.remove("hidden");
+  }
+}
+
+window.logout = function(){
+
+  sessionStorage.removeItem("admin");
+
+  location.reload();
+}
+
+/* ===================================== */
+/* SHOW ADMIN */
+/* ===================================== */
+
+function showAdmin(){
+
+  document
+    .getElementById("loginPage")
+    .classList.add("hidden");
+
+  document
+    .getElementById("adminPanel")
+    .classList.remove("hidden");
+
+  loadRSVPs();
+}
+
+/* ===================================== */
+/* AUTO LOGIN */
+/* ===================================== */
+
+if(sessionStorage.getItem("admin")){
+
+  showAdmin();
+}
+
+/* ===================================== */
+/* LOAD RSVP */
+/* ===================================== */
+
+async function loadRSVPs(){
+
+  const q = query(
+    collection(db,"rsvps"),
+    orderBy("createdAt","desc")
+  );
+
+  const querySnapshot =
+    await getDocs(q);
+
+  const adminList =
+    document.getElementById("adminList");
+
+  adminList.innerHTML = "";
+
+  let totalGuests = 0;
+
+  let confirmed = 0;
+
+  querySnapshot.forEach((docSnap)=>{
+
+    const rsvp = docSnap.data();
+
+    totalGuests += parseInt(rsvp.guests);
+
+    if(rsvp.confirmed){
+      confirmed++;
+    }
+
+    adminList.innerHTML += `
+
+      <div class="bg-white rounded-3xl p-6 shadow-xl">
+
+        <div class="flex flex-col lg:flex-row lg:justify-between gap-6">
+
+          <div class="flex-1">
+
+            <div class="flex items-center gap-3 mb-3">
+
+              <h2 class="text-3xl font-bold text-purple-900">
+                ${rsvp.name}
+              </h2>
+
+              ${
+                rsvp.confirmed
+                ? `
+                  <span class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
+                    Confirmé
+                  </span>
+                `
+                : `
+                  <span class="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm">
+                    En attente
+                  </span>
+                `
+              }
+
+            </div>
+
+            <p class="mb-2">
+              👥 <b>Invités :</b>
+              ${rsvp.guests}
+            </p>
+
+            ${
+              rsvp.contribution
+              ? `
+                <p class="mb-2">
+                  🎁 <b>Contribution :</b>
+                  ${rsvp.contribution}
+                </p>
+              `
+              : ""
+            }
+
+            ${
+              rsvp.message
+              ? `
+                <p class="italic text-gray-600">
+                  "${rsvp.message}"
+                </p>
+              `
+              : ""
+            }
+
+          </div>
+
+          <div class="flex flex-col gap-3">
+
+            <button
+              onclick="confirmRSVP('${docSnap.id}')"
+              class="bg-green-500 hover:bg-green-600 text-white px-5 py-3 rounded-xl"
+            >
+              ✅ Confirmer
+            </button>
+
+            <button
+              onclick="deleteRSVP('${docSnap.id}')"
+              class="bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-xl"
+            >
+              🗑 Supprimer
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    `;
+  });
+
+  document.getElementById("stats").innerHTML = `
+
+    <div class="bg-white rounded-2xl p-8 text-center">
+
+      <h3 class="text-gray-500 mb-2">
+        Confirmations
+      </h3>
+
+      <p class="text-5xl font-bold text-purple-700">
+        ${querySnapshot.size}
+      </p>
+
+    </div>
+
+    <div class="bg-white rounded-2xl p-8 text-center">
+
+      <h3 class="text-gray-500 mb-2">
+        Total invités
+      </h3>
+
+      <p class="text-5xl font-bold text-pink-700">
+        ${totalGuests}
+      </p>
+
+    </div>
+
+    <div class="bg-white rounded-2xl p-8 text-center">
+
+      <h3 class="text-gray-500 mb-2">
+        Confirmés
+      </h3>
+
+      <p class="text-5xl font-bold text-green-700">
+        ${confirmed}
+      </p>
+
+    </div>
+  `;
+}
+
+/* ===================================== */
+/* DELETE */
+/* ===================================== */
+
+window.deleteRSVP = async function(id){
+
+  const ok =
+    confirm("Supprimer cette invitation ?");
+
+  if(!ok) return;
+
+  await deleteDoc(
+    doc(db,"rsvps",id)
+  );
+
+  loadRSVPs();
+}
+
+/* ===================================== */
+/* CONFIRM */
+/* ===================================== */
+
+window.confirmRSVP = async function(id){
+
+  await updateDoc(
+    doc(db,"rsvps",id),
+    {
+      confirmed:true
+    }
+  );
+
+  loadRSVPs();
+}
+
+</script>
+
+</body>
+</html>
